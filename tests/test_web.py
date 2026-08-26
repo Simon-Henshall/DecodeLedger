@@ -1,4 +1,4 @@
-from web import analysis_payload, decode_payload
+from web import analysis_payload, crack_hash_payload, decode_payload
 
 
 def test_web_decode_payload_returns_json_friendly_results():
@@ -57,3 +57,39 @@ def test_web_decode_payload_rejects_blank_text():
         assert str(error) == "Enter some text to decode."
     else:
         raise AssertionError("blank ciphertext should be rejected")
+
+
+def test_web_crack_hash_recovers_dictionary_word():
+    result = crack_hash_payload({"digest": "5d41402abc4b2a76b9719d911017c592", "algorithm": "md5"})
+
+    assert result == [{"hash_name": "md5", "plaintext": "hello", "method": "dictionary"}]
+
+
+def test_web_crack_hash_any_supported_algorithm():
+    result = crack_hash_payload({"digest": "5d41402abc4b2a76b9719d911017c592", "algorithm": ""})
+
+    assert result == [{"hash_name": "md5", "plaintext": "hello", "method": "dictionary"}]
+
+
+def test_web_crack_hash_omitted_algorithm_defaults_to_all():
+    result = crack_hash_payload({"digest": "5d41402abc4b2a76b9719d911017c592"})
+
+    assert result == [{"hash_name": "md5", "plaintext": "hello", "method": "dictionary"}]
+
+
+def test_web_crack_hash_rejects_blank_digest():
+    try:
+        crack_hash_payload({"digest": "   "})
+    except ValueError as error:
+        assert str(error) == "A hash digest is required to crack."
+    else:
+        raise AssertionError("blank digest should be rejected")
+
+
+def test_web_crack_hash_rejects_unknown_algorithm():
+    try:
+        crack_hash_payload({"digest": "5d41402abc4b2a76b9719d911017c592", "algorithm": "des"})
+    except ValueError as error:
+        assert "Unsupported algorithm" in str(error)
+    else:
+        raise AssertionError("unknown algorithm should be rejected")

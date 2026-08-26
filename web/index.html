@@ -146,6 +146,57 @@
       font-size: 13px;
     }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--muted);
+      font: 700 13px 'Aptos', 'Segoe UI', sans-serif;
+      cursor: pointer;
+    }
+
+    .tab:hover {
+      border-color: var(--teal);
+      color: var(--teal-dark);
+    }
+
+    .tab.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #ffffff;
+    }
+
+    input[type="text"] {
+      display: block;
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #b9c8cc;
+      border-radius: 4px;
+      color: var(--ink);
+      background: #fbfcfc;
+      font: 16px/1.5 'Aptos', 'Segoe UI', sans-serif;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(20, 125, 120, .12);
+    }
+
+    .hash-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
     select,
     button {
       border: 1px solid #aebfc4;
@@ -290,6 +341,10 @@
         flex-direction: column;
       }
 
+      .hash-fields {
+        grid-template-columns: 1fr;
+      }
+
       button {
         width: 100%;
       }
@@ -307,6 +362,10 @@
       </div>
       <div class="mark" aria-label="DecodeLedger" title="DecodeLedger">DL</div>
     </header>
+    <nav class="tabs" role="tablist" aria-label="Workspace tools">
+      <button class="tab active" id="tab-decode" type="button" role="tab" aria-selected="true">Decode ciphertext</button>
+      <button class="tab" id="tab-hash" type="button" role="tab" aria-selected="false">Crack a hash</button>
+    </nav>
     <div class="workspace">
       <section class="panel input-panel">
         <form id="decode-form">
@@ -319,24 +378,74 @@
                 <option value="10">top 10</option>
               </select></span><button id="submit" type="submit">Decode &rarr;</button></div>
         </form>
+        <form id="hash-form" hidden>
+          <label for="digest">Hash digest</label>
+          <input id="digest" name="digest" type="text" placeholder="Paste the hex digest to break..." required>
+          <div class="hash-fields">
+            <div>
+              <label for="algorithm">Algorithm</label>
+              <select id="algorithm">
+                <option value="" selected>Any supported</option>
+                <option value="md5">MD5</option>
+                <option value="sha256">SHA-256</option>
+              </select>
+            </div>
+            <div>
+              <label for="max-length">Brute force up to</label>
+              <select id="max-length" aria-label="Maximum brute-force length">
+                <option value="1">1 character</option>
+                <option value="2">2 characters</option>
+                <option value="3">3 characters</option>
+                <option value="4" selected>4 characters</option>
+                <option value="5">5 characters</option>
+                <option value="6">6 characters</option>
+                <option value="7">7 characters</option>
+                <option value="8">8 characters</option>
+              </select>
+            </div>
+          </div>
+          <div class="controls"><button id="crack-submit" type="submit">Crack hash &rarr;</button></div>
+        </form>
       </section>
       <section class="panel results-panel" aria-live="polite">
         <div class="results-heading">
-          <h2>Decoded possibilities</h2><span id="status" class="status">Waiting for text</span>
+          <h2 id="results-title">Decoded possibilities</h2><span id="status" class="status">Waiting for text</span>
         </div>
         <div id="results" class="empty">Your clearest reading will appear here.</div>
       </section>
     </div>
   </main>
   <script>
-    const form = document.querySelector('#decode-form');
+    const tabButtons = document.querySelectorAll('.tab');
+    const decodeForm = document.querySelector('#decode-form');
+    const hashForm = document.querySelector('#hash-form');
+    const results = document.querySelector('#results');
+    const status = document.querySelector('#status');
+    const title = document.querySelector('#results-title');
+
+    tabButtons.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabButtons.forEach((t) => {
+          const active = t === tab;
+          t.classList.toggle('active', active);
+          t.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        const isHash = tab.id === 'tab-hash';
+        decodeForm.hidden = isHash;
+        hashForm.hidden = !isHash;
+        status.textContent = isHash ? 'Waiting for a digest' : 'Waiting for text';
+        status.title = '';
+        title.textContent = isHash ? 'Recovered plaintext' : 'Decoded possibilities';
+        results.className = 'empty';
+        results.textContent = isHash ? 'Enter a hash digest to crack.' : 'Your clearest reading will appear here.';
+      });
+    });
+
     const input = document.querySelector('#ciphertext');
     const limit = document.querySelector('#limit');
     const submit = document.querySelector('#submit');
-    const results = document.querySelector('#results');
-    const status = document.querySelector('#status');
 
-    form.addEventListener('submit', async (event) => {
+    decodeForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       submit.disabled = true;
       status.textContent = 'Working...';
@@ -353,6 +462,35 @@
         status.title = data.analysis.hint;
       } catch (error) { results.className = 'error'; results.textContent = error.message; status.textContent = 'Could not decode'; }
       finally { submit.disabled = false; }
+    });
+
+    const digestInput = document.querySelector('#digest');
+    const algorithm = document.querySelector('#algorithm');
+    const maxLength = document.querySelector('#max-length');
+    const crackSubmit = document.querySelector('#crack-submit');
+
+    hashForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      crackSubmit.disabled = true;
+      status.textContent = 'Working...';
+      results.className = 'empty';
+      results.textContent = 'Hashing dictionary words';
+      try {
+        const response = await fetch('/api/hash-crack', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ digest: digestInput.value.trim(), algorithm: algorithm.value, max_length: Number(maxLength.value) }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        if (!Array.isArray(data) || data.length === 0) {
+          results.className = 'empty';
+          results.textContent = 'No match found in the dictionary or brute-force space.';
+          status.textContent = 'No match';
+          return;
+        }
+        results.className = '';
+        results.innerHTML = data.map((result, index) => `<article class="result" style="animation-delay: ${index * 45}ms"><div class="result-meta"><span>${result.hash_name}</span><span>${result.method}</span></div><div class="plaintext"></div></article>`).join('');
+        data.forEach((result, index) => { results.children[index].querySelector('.plaintext').textContent = result.plaintext; });
+        status.textContent = `${data.length} plaintext${data.length === 1 ? '' : 's'} recovered`;
+      } catch (error) { results.className = 'error'; results.textContent = error.message; status.textContent = 'Could not crack'; }
+      finally { crackSubmit.disabled = false; }
     });
   </script>
 </body>

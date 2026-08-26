@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from decoder.engine import DecoderEngine
+from decoder.hashattack import DEFAULT_HASHES, HashCracker
 from decoder.intelligence import recursive_unpeeler
 
 
@@ -34,6 +35,32 @@ def decode_payload(payload: dict) -> list[dict]:
     ]
 
 
+def crack_hash_payload(payload: dict) -> list[dict]:
+    """Run a dictionary/brute-force attack on a hash digest and return JSON-friendly results."""
+    digest = payload.get("digest", "")
+    if not isinstance(digest, str) or not digest.strip():
+        raise ValueError("A hash digest is required to crack.")
+
+    algorithm = payload.get("algorithm")
+    supported = {hash_algorithm.name for hash_algorithm in DEFAULT_HASHES}
+    if algorithm and algorithm not in supported:
+        raise ValueError(f"Unsupported algorithm '{algorithm}'. Choose from {sorted(supported)}.")
+    if algorithm not in supported:
+        algorithm = None
+
+    max_length = payload.get("max_length", 4)
+    if not isinstance(max_length, int) or isinstance(max_length, bool) or not 1 <= max_length <= 8:
+        raise ValueError("Brute-force length must be between 1 and 8.")
+
+    algorithms = DEFAULT_HASHES if algorithm is None else tuple(
+        hash_algorithm for hash_algorithm in DEFAULT_HASHES if hash_algorithm.name == algorithm
+    )
+    return [
+        {"hash_name": result.hash_name, "plaintext": result.plaintext, "method": result.method}
+        for result in HashCracker(algorithms=algorithms, max_length=max_length).crack(digest)
+    ]
+
+
 def analysis_payload(ciphertext: str) -> dict:
     analysis = DecoderEngine().analyze(ciphertext)
     encoding_layers = [chain for chain, value in recursive_unpeeler(ciphertext) if chain]
@@ -58,15 +85,19 @@ class DecoderRequestHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
 
     def do_POST(self) -> None:
-        if urlparse(self.path).path != "/api/decode":
+        path = urlparse(self.path).path
+        if path not in {"/api/decode", "/api/hash-crack"}:
             self.send_error(404)
             return
 
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(content_length))
-            ciphertext = payload.get("ciphertext", "")
-            response = {"analysis": analysis_payload(ciphertext), "results": decode_payload(payload)}
+            if path == "/api/hash-crack":
+                response = crack_hash_payload(payload)
+            else:
+                ciphertext = payload.get("ciphertext", "")
+                response = {"analysis": analysis_payload(ciphertext), "results": decode_payload(payload)}
             status = 200
         except (ValueError, TypeError, json.JSONDecodeError) as error:
             response = {"error": str(error)}
