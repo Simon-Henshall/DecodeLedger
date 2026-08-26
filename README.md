@@ -1,8 +1,8 @@
 # DecodeLedger
 
 [![Tests](https://github.com/Simon-Henshall/DecodeLedger/actions/workflows/tests.yml/badge.svg)](https://github.com/Simon-Henshall/DecodeLedger/actions/workflows/tests.yml)
-[![codecov](https://codecov.io)](https://codecov.io)
-[![Python Versions](https://shields.io)](https://pypi.org)
+[![Test Coverage](https://codecov.io/gh/Simon-Henshall/DecodeLedger/branch/main/graph/badge.svg)](https://codecov.io/gh/Simon-Henshall/DecodeLedger)
+[![Python Versions](https://shields.io)](https://github.com/Simon-Henshall/DecodeLedger)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 DecodeLedger is a Python toolkit for exploring unknown text. It tries a focused
