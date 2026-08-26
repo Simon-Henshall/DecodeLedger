@@ -29,10 +29,17 @@ python web.py
 Then open <http://127.0.0.1:8000>.
 
 The CLI prints the highest-ranked candidate by default. Use `--all` to inspect
-every candidate and `--top N` to limit the number shown:
+only candidates that meet the dictionary-confidence threshold, and `--top N`
+to limit the number shown:
 
 ```text
 python main.py "Khoor, zruog!" --all --top 5
+```
+
+Adjust the readability threshold from 0 to 1 when needed:
+
+```text
+python main.py "Khoor, zruog!" --all --threshold 0.75
 ```
 
 The package is intentionally modular. Add a cipher by inheriting from

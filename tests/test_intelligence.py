@@ -2,6 +2,7 @@ from decoder.engine import DecoderEngine
 from decoder.intelligence.dictionary import dictionary_score, word_tokens
 from decoder.intelligence.frequency import chi_squared_score
 from decoder.intelligence.analysis import analyze_ciphertext
+from main import build_parser
 
 
 def test_frequency_score_is_finite_for_letters():
@@ -45,3 +46,10 @@ def test_analysis_identifies_low_ic_profile():
 def test_analysis_uses_chi_square_to_refine_high_ic_profile():
     assert DecoderEngine().analyze("kdwaeanesztrardhkruatnkuu").primary_cipher == "bifid"
     assert DecoderEngine().analyze("wriorfeoeeesvelanadcedetc").primary_cipher == "scytale"
+
+
+def test_cli_parser_exposes_readability_threshold():
+    args = build_parser().parse_args(["ciphertext", "--all", "--threshold", "0.75"])
+
+    assert args.all is True
+    assert args.threshold == 0.75
