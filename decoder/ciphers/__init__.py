@@ -10,6 +10,7 @@ from .playfair import PlayfairCipher
 from .rail_fence import RailFenceCipher
 from .scytale import ScytaleCipher
 from .vigenere import VigenereCipher
+from .hill import HillCipher
 
 __all__ = [
 	"AffineCipher",
@@ -22,4 +23,5 @@ __all__ = [
 	"RailFenceCipher",
 	"ScytaleCipher",
 	"VigenereCipher",
+	"HillCipher",
 ]

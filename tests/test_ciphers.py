@@ -5,6 +5,7 @@ from decoder.ciphers import (
     BaconCipher,
     CaesarCipher,
     ColumnarTranspositionCipher,
+    HillCipher,
     PlayfairCipher,
     RailFenceCipher,
     ScytaleCipher,
@@ -44,6 +45,10 @@ def test_bifid_tries_common_key_and_period():
 
 def test_scytale_tries_common_diameters():
     assert "wearediscoveredfleeatonce" in ScytaleCipher().crack("wriorfeoeeesvelanadcedetc")
+
+
+def test_hill_tries_common_key():
+    assert "help" in HillCipher().crack("hiat")
 
 
 def test_playfair_tries_common_key():
