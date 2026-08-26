@@ -40,6 +40,7 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
         dictionary_score(_shift_letters(ciphertext, shift)) for shift in range(26)
     ) if letters else 0.0
     atbash_confidence = dictionary_score(_atbash_letters(ciphertext)) if letters else 0.0
+    short_payload = length < 20
 
     if entropy < 3.0:
         entropy_band = "low"
@@ -57,16 +58,16 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
     if character_set and set(character_set) <= {"a", "b"}:
         likely_ciphers = ("bacon",)
         hint = "Only A and B symbols detected: route directly to Bacon."
-    elif atbash_confidence >= 0.5:
+    elif atbash_confidence >= (0.5 if not short_payload else 0.6):
         likely_ciphers = ("atbash", "caesar", "affine", "rail fence", "scytale", "columnar transposition")
         hint = "Atbash produces recognizable English, suggesting a mirrored substitution."
-    elif simple_substitution_confidence >= 0.5:
+    elif simple_substitution_confidence >= (0.5 if not short_payload else 0.6):
         likely_ciphers = ("caesar", "atbash", "affine", "rail fence", "scytale", "columnar transposition")
         hint = "A Caesar-style shift produces recognizable English, suggesting simple substitution."
-    elif coincidence >= 0.06 and chi_squared_score(letters) >= 50:
+    elif not short_payload and coincidence >= 0.06 and chi_squared_score(letters) >= 50:
         likely_ciphers = ("bifid", "hill", "playfair", "vigenere", "caesar", "atbash", "affine")
         hint = "High IC with a high chi-square score suggests a digraph or polyalphabetic cipher."
-    elif coincidence >= 0.06:
+    elif not short_payload and coincidence >= 0.06:
         likely_ciphers = ("scytale", "rail fence", "columnar transposition", "caesar", "atbash", "affine")
         hint = "High IC with a low chi-square score suggests transposition or simple substitution."
     elif coincidence <= 0.045:

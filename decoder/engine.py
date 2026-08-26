@@ -78,6 +78,11 @@ class DecoderEngine:
                 trigram_confidence = trigram_score(plaintext)
                 chi_square = chi_squared_score(plaintext)
                 chi_confidence = 0.0 if chi_square == float("inf") else exp(-chi_square / 100)
+                reliability = min(1.0, sum(character.isascii() and character.isalpha() for character in plaintext) / 20)
+                word_confidence = _reliable_confidence(word_confidence, reliability)
+                bigram_confidence = _reliable_confidence(bigram_confidence, reliability)
+                trigram_confidence = _reliable_confidence(trigram_confidence, reliability)
+                chi_confidence = _reliable_confidence(chi_confidence, reliability)
                 score = (
                     word_confidence * 0.45
                     + bigram_confidence * 0.20
@@ -101,3 +106,8 @@ class DecoderEngine:
     @staticmethod
     def analyze(ciphertext: str) -> CipherAnalysis:
         return analyze_ciphertext(ciphertext)
+
+
+def _reliable_confidence(value: float, reliability: float) -> float:
+    """Shrink short-sample evidence toward neutral confidence."""
+    return 0.5 + (value - 0.5) * reliability
