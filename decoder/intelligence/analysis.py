@@ -37,6 +37,7 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
     simple_substitution_confidence = max(
         dictionary_score(_shift_letters(ciphertext, shift)) for shift in range(26)
     ) if letters else 0.0
+    atbash_confidence = dictionary_score(_atbash_letters(ciphertext)) if letters else 0.0
 
     if entropy < 3.0:
         entropy_band = "low"
@@ -54,6 +55,9 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
     if character_set and set(character_set) <= {"a", "b"}:
         likely_ciphers = ("bacon",)
         hint = "Only A and B symbols detected: route directly to Bacon."
+    elif atbash_confidence >= 0.5:
+        likely_ciphers = ("atbash", "caesar", "affine", "rail fence", "scytale", "columnar transposition")
+        hint = "Atbash produces recognizable English, suggesting a mirrored substitution."
     elif simple_substitution_confidence >= 0.5:
         likely_ciphers = ("caesar", "atbash", "affine", "rail fence", "scytale", "columnar transposition")
         hint = "A Caesar-style shift produces recognizable English, suggesting simple substitution."
@@ -79,6 +83,14 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
 def _shift_letters(text: str, shift: int) -> str:
     return "".join(
         chr((ord(character.lower()) - ord("a") - shift) % 26 + ord("a"))
+        if character.isascii() and character.isalpha() else character
+        for character in text
+    )
+
+
+def _atbash_letters(text: str) -> str:
+    return "".join(
+        chr(ord("z") - (ord(character.lower()) - ord("a")))
         if character.isascii() and character.isalpha() else character
         for character in text
     )

@@ -31,6 +31,13 @@ def test_engine_ranks_caesar_plaintext_highest():
     assert result.cipher_name == "caesar"
 
 
+def test_engine_detects_atbash_plaintext():
+    result = DecoderEngine().decode("Svool, Dliow!")[0]
+
+    assert result.plaintext == "Hello, World!"
+    assert result.cipher_name == "atbash"
+
+
 def test_engine_prefers_dictionary_confidence_for_vigenere():
     result = DecoderEngine().decode("Lxfopv ef rnhr")[0]
 

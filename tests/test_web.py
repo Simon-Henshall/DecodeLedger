@@ -8,6 +8,13 @@ def test_web_decode_payload_returns_json_friendly_results():
     assert result["cipher_name"] == "caesar"
 
 
+def test_web_decode_payload_detects_atbash_result():
+    result = decode_payload({"ciphertext": "Svool, Dliow!", "limit": 1})[0]
+
+    assert result["plaintext"] == "Hello, World!"
+    assert result["cipher_name"] == "atbash"
+
+
 def test_web_decode_payload_returns_bacon_result():
     result = decode_payload({"ciphertext": "aabbb aabaa ababa ababa abbab", "limit": 5})[0]
 
