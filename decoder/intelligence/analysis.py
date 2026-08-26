@@ -3,8 +3,8 @@
 from collections import Counter
 from dataclasses import dataclass
 
-from .frequency import chi_squared_score
 from .dictionary import dictionary_score
+from .frequency import chi_squared_score, shannon_entropy
 
 
 @dataclass(frozen=True)
@@ -12,6 +12,9 @@ class CipherAnalysis:
     letter_count: int
     index_of_coincidence: float
     chi_squared: float
+    entropy: float
+    entropy_band: str
+    pipeline_route: str
     character_set: str
     likely_ciphers: tuple[str, ...]
     hint: str
@@ -30,9 +33,23 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
         if length >= 2 else 0.0
     )
     character_set = "".join(sorted(set(letters)))
+    entropy = shannon_entropy(ciphertext)
     simple_substitution_confidence = max(
         dictionary_score(_shift_letters(ciphertext, shift)) for shift in range(26)
     ) if letters else 0.0
+
+    if entropy < 3.0:
+        entropy_band = "low"
+        pipeline_route = "simple-cipher"
+    elif 3.5 <= entropy <= 5.5:
+        entropy_band = "natural"
+        pipeline_route = "linguistic-region-coding"
+    elif entropy > 6.5:
+        entropy_band = "sky-high"
+        pipeline_route = "brute-forcer-or-malware-triage"
+    else:
+        entropy_band = "middle"
+        pipeline_route = "general-cipher-analysis"
 
     if character_set and set(character_set) <= {"a", "b"}:
         likely_ciphers = ("bacon",)
@@ -53,7 +70,10 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
         likely_ciphers = ("caesar", "vigenere", "bifid", "hill", "playfair")
         hint = "IC is inconclusive: comparing substitution, polyalphabetic, and digraph ciphers."
 
-    return CipherAnalysis(length, coincidence, chi_squared_score(letters), character_set, likely_ciphers, hint)
+    return CipherAnalysis(
+        length, coincidence, chi_squared_score(letters), entropy, entropy_band,
+        pipeline_route, character_set, likely_ciphers, hint,
+    )
 
 
 def _shift_letters(text: str, shift: int) -> str:

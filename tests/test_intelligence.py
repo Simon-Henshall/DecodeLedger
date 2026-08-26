@@ -1,6 +1,6 @@
 from decoder.engine import DecoderEngine
 from decoder.intelligence.dictionary import dictionary_score, word_tokens
-from decoder.intelligence.frequency import bigram_score, chi_squared_score, trigram_score
+from decoder.intelligence.frequency import bigram_score, chi_squared_score, shannon_entropy, trigram_score
 from decoder.intelligence.analysis import analyze_ciphertext
 from main import build_parser
 
@@ -12,6 +12,11 @@ def test_frequency_score_is_finite_for_letters():
 def test_ngram_scores_prefer_english_sequences():
     assert bigram_score("the quick brown fox") > bigram_score("qzx qzx qzx")
     assert trigram_score("the quick brown fox") > trigram_score("qzx qzx qzx")
+
+
+def test_shannon_entropy_distinguishes_repetition_and_variety():
+    assert shannon_entropy("aaaaaaaa") == 0.0
+    assert shannon_entropy("abcdefgh") == 3.0
 
 
 def test_dictionary_scores_known_words():
@@ -39,6 +44,22 @@ def test_analysis_routes_ab_input_to_bacon():
     assert analysis.primary_cipher == "bacon"
     assert analysis.index_of_coincidence > 0
     assert "A and B" in analysis.hint
+    assert analysis.entropy_band == "low"
+    assert analysis.pipeline_route == "simple-cipher"
+
+
+def test_analysis_routes_natural_entropy_to_linguistic_pipeline():
+    analysis = analyze_ciphertext("The quick brown fox jumps over the lazy dog")
+
+    assert analysis.entropy_band == "natural"
+    assert analysis.pipeline_route == "linguistic-region-coding"
+
+
+def test_analysis_routes_high_entropy_to_triage_pipeline():
+    analysis = analyze_ciphertext("".join(chr(0x400 + index) for index in range(128)))
+
+    assert analysis.entropy_band == "sky-high"
+    assert analysis.pipeline_route == "brute-forcer-or-malware-triage"
 
 
 def test_analysis_identifies_low_ic_profile():

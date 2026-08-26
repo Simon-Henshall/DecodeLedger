@@ -1,6 +1,7 @@
 """English letter-frequency scoring."""
 
 from collections import Counter
+from math import log2
 import string
 
 ENGLISH_FREQUENCIES = {
@@ -51,3 +52,13 @@ def bigram_score(text: str) -> float:
 def trigram_score(text: str) -> float:
     """Return the proportion of adjacent letter triplets common in English."""
     return _ngram_score(text, 3, COMMON_TRIGRAMS)
+
+
+def shannon_entropy(text: str) -> float:
+    """Return Shannon entropy in bits per non-whitespace character."""
+    symbols = [character for character in text if not character.isspace()]
+    if not symbols:
+        return 0.0
+    counts = Counter(symbols)
+    length = len(symbols)
+    return -sum((count / length) * log2(count / length) for count in counts.values())
