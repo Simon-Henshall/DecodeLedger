@@ -32,6 +32,19 @@ def decode_payload(payload: dict) -> list[dict]:
     ]
 
 
+def analysis_payload(ciphertext: str) -> dict:
+    analysis = DecoderEngine().analyze(ciphertext)
+    return {
+        "letter_count": analysis.letter_count,
+        "index_of_coincidence": round(analysis.index_of_coincidence, 4),
+        "chi_squared": round(analysis.chi_squared, 2),
+        "character_set": analysis.character_set,
+        "likely_ciphers": list(analysis.likely_ciphers),
+        "primary_cipher": analysis.primary_cipher,
+        "hint": analysis.hint,
+    }
+
+
 class DecoderRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
@@ -44,7 +57,8 @@ class DecoderRequestHandler(SimpleHTTPRequestHandler):
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(content_length))
-            response = {"results": decode_payload(payload)}
+            ciphertext = payload.get("ciphertext", "")
+            response = {"analysis": analysis_payload(ciphertext), "results": decode_payload(payload)}
             status = 200
         except (ValueError, TypeError, json.JSONDecodeError) as error:
             response = {"error": str(error)}

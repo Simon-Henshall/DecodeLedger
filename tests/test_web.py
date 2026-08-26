@@ -1,4 +1,4 @@
-from web import decode_payload
+from web import analysis_payload, decode_payload
 
 
 def test_web_decode_payload_returns_json_friendly_results():
@@ -13,6 +13,19 @@ def test_web_decode_payload_returns_bacon_result():
 
     assert result["plaintext"] == "hello"
     assert result["cipher_name"] == "bacon"
+
+
+def test_web_analysis_includes_cipher_hint():
+    analysis = analysis_payload("aabbb aabaa ababa ababa abbab")
+
+    assert analysis["primary_cipher"] == "bacon"
+    assert analysis["likely_ciphers"] == ["bacon"]
+
+
+def test_web_decode_prioritizes_predicted_transposition():
+    result = decode_payload({"ciphertext": "wriorfeoeeesvelanadcedetc", "limit": 5})
+
+    assert any(item["cipher_name"] == "scytale" and item["plaintext"] == "wearediscoveredfleeatonce" for item in result)
 
 
 def test_web_decode_payload_rejects_blank_text():
