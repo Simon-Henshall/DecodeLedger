@@ -56,7 +56,7 @@ def _try_encodings(text: str, custom_alphabet: str | None = None) -> list[tuple[
 def _try_decode(candidates: list[tuple[str, str]], name: str, decoder) -> None:
     try:
         decoded = decoder().decode("utf-8")
-    except (ValueError, UnicodeDecodeError, TypeError):
+    except Exception:
         return
     if _is_useful_text(decoded):
         candidates.append((name, decoded))
@@ -92,7 +92,12 @@ def _looks_like_base64(text: str) -> bool:
 
 
 def _looks_like_base85(text: str) -> bool:
-    return text.startswith("<~") and text.endswith("~>") or len(text) >= 5 and all(33 <= ord(character) <= 117 for character in text)
+    if text.startswith("<~") and text.endswith("~>"):
+        return True
+    if len(text) < 5 or not all(33 <= ord(character) <= 117 for character in text):
+        return False
+    punctuation = sum(not character.isalnum() for character in text)
+    return punctuation / len(text) >= 0.2
 
 
 def _is_useful_text(text: str) -> bool:

@@ -132,4 +132,21 @@ def test_recursive_unpeeler_supports_common_structural_encodings():
     assert ("binary", "Hello") in recursive_unpeeler("01001000 01100101 01101100 01101100 01101111")
     assert ("percent", "Hello world") in recursive_unpeeler("Hello%20world")
     assert ("base32", "Hello") in recursive_unpeeler("JBSWY3DP")
-    assert ("base85", "Hello") in recursive_unpeeler("87cURDZ")
+    assert ("base85", "Hello") in recursive_unpeeler("<~87cURDZ~>")
+
+
+def test_recursive_unpeeler_does_not_misclassify_alpha_ciphertext_as_base85():
+    assert not any(chain == "base85" for chain, value in recursive_unpeeler("LxfopvEfrnhr"))
+
+
+def test_recursive_unpeeler_ignores_malformed_encoding_candidates():
+    layers = recursive_unpeeler("<~not valid ascii85 data~>")
+
+    assert layers == [("", "<~not valid ascii85 data~>")]
+
+
+def test_engine_decodes_peeled_text_without_reanalyzing_original_layer():
+    result = DecoderEngine(max_workers=2).decode("48656c6c6f")[0]
+
+    assert result.cipher_name.startswith("hex -> ")
+    assert result.plaintext == "Hello"

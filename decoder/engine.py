@@ -43,6 +43,10 @@ def _crack_cipher(arguments: tuple[Cipher, str]) -> tuple[str, list[str]]:
     return cipher.name, cipher.crack(ciphertext)
 
 
+def _analyze_text(text: str) -> CipherAnalysis:
+    return analyze_ciphertext(text)
+
+
 DEFAULT_CIPHERS: tuple[Cipher, ...] = (
     CaesarCipher(),
     AtbashCipher(),
@@ -73,11 +77,26 @@ class DecoderEngine:
 
     def _decode_peeled(self, peeled_inputs: list[tuple[str, str]], analysis: CipherAnalysis) -> list[DecodeResult]:
         results = []
-        for encoding_chain, text in peeled_inputs:
-            for result in self._decode_text(text, self.analyze(text)):
+        analyses = self._analyze_peeled_inputs(peeled_inputs, analysis)
+        for (encoding_chain, text), text_analysis in zip(peeled_inputs, analyses):
+            for result in self._decode_text(text, text_analysis):
                 name = f"{encoding_chain} -> {result.cipher_name}" if encoding_chain else result.cipher_name
                 results.append(DecodeResult(name, result.plaintext, result.score, result.dictionary_confidence))
         return sorted(results, key=lambda result: result.score, reverse=True)
+
+    def _analyze_peeled_inputs(
+        self,
+        peeled_inputs: list[tuple[str, str]],
+        original_analysis: CipherAnalysis,
+    ) -> list[CipherAnalysis]:
+        if len(peeled_inputs) <= 1:
+            return [original_analysis]
+        analyses = [original_analysis]
+        texts = [text for encoding_chain, text in peeled_inputs[1:]]
+        worker_count = self.max_workers or min(len(texts), os.cpu_count() or 1)
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            analyses.extend(executor.map(_analyze_text, texts))
+        return analyses
 
     def _decode_text(self, ciphertext: str, analysis: CipherAnalysis) -> list[DecodeResult]:
         results = []
