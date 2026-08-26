@@ -3,7 +3,22 @@
 import itertools
 from dataclasses import dataclass
 
-from .hashes import HashAlgorithm, MD5Hash, SHA256Hash
+from .hashes import (
+    Blake2BHash,
+    Blake2SHash,
+    HashAlgorithm,
+    MD5Hash,
+    NTLMHash,
+    SHA1Hash,
+    SHA224Hash,
+    SHA256Hash,
+    SHA384Hash,
+    SHA512Hash,
+    SHA3224Hash,
+    SHA3256Hash,
+    SHA3384Hash,
+    SHA3512Hash,
+)
 from .intelligence.dictionary import COMMON_WORDS
 
 
@@ -16,7 +31,21 @@ class HashAttackResult:
     method: str
 
 
-DEFAULT_HASHES: tuple[HashAlgorithm, ...] = (MD5Hash(), SHA256Hash())
+DEFAULT_HASHES: tuple[HashAlgorithm, ...] = (
+    MD5Hash(),
+    SHA1Hash(),
+    SHA224Hash(),
+    SHA256Hash(),
+    SHA384Hash(),
+    SHA512Hash(),
+    SHA3224Hash(),
+    SHA3256Hash(),
+    SHA3384Hash(),
+    SHA3512Hash(),
+    Blake2SHash(),
+    Blake2BHash(),
+    NTLMHash(),
+)
 
 # Lowercase alphabetical keyspace used when walking brute-force candidates.
 DEFAULT_CHARACTERS = "abcdefghijklmnopqrstuvwxyz"

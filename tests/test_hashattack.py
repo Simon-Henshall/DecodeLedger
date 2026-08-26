@@ -1,7 +1,7 @@
 from main import build_parser
 
 from decoder.hashattack import HashCracker
-from decoder.hashes import MD5Hash, SHA256Hash
+from decoder.hashes import MD5Hash, SHA1Hash, SHA256Hash
 
 
 def test_dictionary_attack_recovers_common_word():
@@ -30,6 +30,13 @@ def test_only_matching_algorithm_is_attempted():
     digest = SHA256Hash().hash_text("hello")
 
     assert [result.hash_name for result in HashCracker().crack(digest)] == ["sha256"]
+
+
+def test_new_sha1_algorithm_is_attempted():
+    digest = SHA1Hash().hash_text("hello")
+
+    assert [result.hash_name for result in HashCracker().crack(digest)] == ["sha1"]
+    assert HashCracker().crack(digest)[0].plaintext == "hello"
 
 
 def test_attack_skips_wrong_length_digests():
