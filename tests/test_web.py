@@ -28,6 +28,7 @@ def test_web_analysis_includes_cipher_hint():
     assert analysis["primary_cipher"] == "bacon"
     assert analysis["likely_ciphers"] == ["bacon"]
     assert analysis["pipeline_route"] == "simple-cipher"
+    assert " " in analysis["raw_character_set"]
 
 
 def test_web_decode_prioritizes_predicted_transposition():

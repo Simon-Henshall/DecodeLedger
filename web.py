@@ -42,6 +42,7 @@ def analysis_payload(ciphertext: str) -> dict:
         "entropy_band": analysis.entropy_band,
         "pipeline_route": analysis.pipeline_route,
         "character_set": analysis.character_set,
+        "raw_character_set": analysis.raw_character_set,
         "likely_ciphers": list(analysis.likely_ciphers),
         "primary_cipher": analysis.primary_cipher,
         "hint": analysis.hint,

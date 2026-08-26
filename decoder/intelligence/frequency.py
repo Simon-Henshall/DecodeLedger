@@ -55,8 +55,8 @@ def trigram_score(text: str) -> float:
 
 
 def shannon_entropy(text: str) -> float:
-    """Return Shannon entropy in bits per non-whitespace character."""
-    symbols = [character for character in text if not character.isspace()]
+    """Return Shannon entropy in bits per character from the raw input."""
+    symbols = list(text)
     if not symbols:
         return 0.0
     counts = Counter(symbols)

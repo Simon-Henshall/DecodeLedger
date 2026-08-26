@@ -17,6 +17,7 @@ def test_ngram_scores_prefer_english_sequences():
 def test_shannon_entropy_distinguishes_repetition_and_variety():
     assert shannon_entropy("aaaaaaaa") == 0.0
     assert shannon_entropy("abcdefgh") == 3.0
+    assert shannon_entropy("a b") > shannon_entropy("ab")
 
 
 def test_dictionary_scores_known_words():
@@ -67,6 +68,14 @@ def test_analysis_routes_high_entropy_to_triage_pipeline():
 
     assert analysis.entropy_band == "sky-high"
     assert analysis.pipeline_route == "brute-forcer-or-malware-triage"
+
+
+def test_analysis_entropy_preserves_raw_symbols():
+    analysis = analyze_ciphertext("Aa+/=_09")
+
+    assert "+" in analysis.raw_character_set
+    assert "=" in analysis.raw_character_set
+    assert analysis.entropy == shannon_entropy("Aa+/=_09")
 
 
 def test_analysis_identifies_low_ic_profile():

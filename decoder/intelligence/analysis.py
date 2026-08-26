@@ -16,6 +16,7 @@ class CipherAnalysis:
     entropy_band: str
     pipeline_route: str
     character_set: str
+    raw_character_set: str
     likely_ciphers: tuple[str, ...]
     hint: str
 
@@ -34,6 +35,7 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
     )
     character_set = "".join(sorted(set(letters)))
     entropy = shannon_entropy(ciphertext)
+    raw_character_set = "".join(sorted(set(ciphertext)))
     simple_substitution_confidence = max(
         dictionary_score(_shift_letters(ciphertext, shift)) for shift in range(26)
     ) if letters else 0.0
@@ -76,7 +78,7 @@ def analyze_ciphertext(ciphertext: str) -> CipherAnalysis:
 
     return CipherAnalysis(
         length, coincidence, chi_squared_score(letters), entropy, entropy_band,
-        pipeline_route, character_set, likely_ciphers, hint,
+        pipeline_route, character_set, raw_character_set, likely_ciphers, hint,
     )
 
 
