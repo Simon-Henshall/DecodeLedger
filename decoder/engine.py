@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from .ciphers import (
     AffineCipher,
     AtbashCipher,
+    BifidCipher,
     BaconCipher,
     CaesarCipher,
     ColumnarTranspositionCipher,
     PlayfairCipher,
+    RailFenceCipher,
     VigenereCipher,
 )
 from .ciphers.base import Cipher
@@ -28,6 +30,8 @@ DEFAULT_CIPHERS: tuple[Cipher, ...] = (
     AtbashCipher(),
     AffineCipher(),
     BaconCipher(),
+    RailFenceCipher(),
+    BifidCipher(),
     VigenereCipher(),
     PlayfairCipher(),
     ColumnarTranspositionCipher(),

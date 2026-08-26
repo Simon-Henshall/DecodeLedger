@@ -1,10 +1,12 @@
 from decoder.ciphers import (
     AffineCipher,
     AtbashCipher,
+    BifidCipher,
     BaconCipher,
     CaesarCipher,
     ColumnarTranspositionCipher,
     PlayfairCipher,
+    RailFenceCipher,
     VigenereCipher,
 )
 
@@ -29,6 +31,14 @@ def test_vigenere_tries_common_key():
 
 def test_bacon_decodes_binary_groups():
     assert BaconCipher().crack("aabbb aabaa ababa ababa abbab") == ["hello"]
+
+
+def test_rail_fence_tries_common_rail_counts():
+    assert "wearediscoveredfleeatonce" in RailFenceCipher().crack("wecrlteerdsoeefeaocaivden")
+
+
+def test_bifid_tries_common_key_and_period():
+    assert "wearediscoveredfleeatonce" in BifidCipher().crack("kdwaeanesztrardhkruatnkuu")
 
 
 def test_playfair_tries_common_key():
