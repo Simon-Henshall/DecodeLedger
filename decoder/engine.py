@@ -2,7 +2,15 @@
 
 from dataclasses import dataclass
 
-from .ciphers import AtbashCipher, CaesarCipher, ColumnarTranspositionCipher, PlayfairCipher, VigenereCipher
+from .ciphers import (
+    AffineCipher,
+    AtbashCipher,
+    BaconCipher,
+    CaesarCipher,
+    ColumnarTranspositionCipher,
+    PlayfairCipher,
+    VigenereCipher,
+)
 from .ciphers.base import Cipher
 from .intelligence import chi_squared_score, dictionary_score
 
@@ -18,6 +26,8 @@ class DecodeResult:
 DEFAULT_CIPHERS: tuple[Cipher, ...] = (
     CaesarCipher(),
     AtbashCipher(),
+    AffineCipher(),
+    BaconCipher(),
     VigenereCipher(),
     PlayfairCipher(),
     ColumnarTranspositionCipher(),

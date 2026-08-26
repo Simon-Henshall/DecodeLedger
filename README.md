@@ -42,6 +42,6 @@ an instance in `decoder.engine.DEFAULT_CIPHERS`.
 ## Project layout
 
 - `main.py` - command-line entry point
-- `decoder/ciphers/` - Caesar, Atbash, Vigenere, Playfair, and Columnar Transposition crackers
+- `decoder/ciphers/` - Affine, Atbash, Bacon, Caesar, Vigenere, Playfair, and Columnar Transposition crackers
 - `decoder/intelligence/` - frequency and dictionary scoring
 - `tests/` - unit tests for the cipher and scoring layers
