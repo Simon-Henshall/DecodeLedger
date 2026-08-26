@@ -1,6 +1,7 @@
 """Small web interface for the multi-decoder."""
 
 import json
+import math
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -39,7 +40,7 @@ def analysis_payload(ciphertext: str) -> dict:
     return {
         "letter_count": analysis.letter_count,
         "index_of_coincidence": round(analysis.index_of_coincidence, 4),
-        "chi_squared": round(analysis.chi_squared, 2),
+        "chi_squared": round(analysis.chi_squared, 2) if math.isfinite(analysis.chi_squared) else None,
         "entropy": round(analysis.entropy, 4),
         "entropy_band": analysis.entropy_band,
         "pipeline_route": analysis.pipeline_route,

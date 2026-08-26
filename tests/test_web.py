@@ -37,6 +37,13 @@ def test_web_analysis_reports_recursive_encoding_layers():
     assert "hex" in analysis["encoding_layers"]
 
 
+def test_web_binary_input_returns_json_safe_analysis():
+    analysis = analysis_payload("01001000 01100101 01101100 01101100 01101111")
+
+    assert analysis["chi_squared"] is None
+    assert analysis["encoding_layers"] == ["binary"]
+
+
 def test_web_decode_prioritizes_predicted_transposition():
     result = decode_payload({"ciphertext": "wriorfeoeeesvelanadcedetc", "limit": 5})
 
