@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Decoder</title>
+  <style>
+    :root {
+      --ink: #17221d;
+      --muted: #65736b;
+      --paper: #f4f0e6;
+      --panel: #fffdf8;
+      --lime: #d5ed69;
+      --coral: #f47c5c;
+      --line: #d9d5c9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: radial-gradient(circle at 90% 8%, #e4edb5 0 9%, transparent 27%), var(--paper);
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    main {
+      width: min(920px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 54px 0 70px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 42px;
+    }
+
+    .kicker {
+      margin: 0 0 10px;
+      color: var(--coral);
+      font: 700 12px/1.2 Arial, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 560px;
+      margin: 0;
+      font-size: clamp(44px, 8vw, 82px);
+      line-height: .88;
+      letter-spacing: -3px;
+      font-weight: 400;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 62px;
+      height: 62px;
+      flex: 0 0 auto;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--lime);
+      font: 700 22px Arial, sans-serif;
+      transform: rotate(8deg);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 7px 7px 0 #ded8c9;
+    }
+
+    .input-panel {
+      padding: 26px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 12px;
+      font: 700 13px Arial, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 190px;
+      resize: vertical;
+      padding: 16px;
+      border: 2px solid var(--ink);
+      border-radius: 0;
+      color: var(--ink);
+      background: #fffefb;
+      font: 24px/1.35 Georgia, serif;
+      outline: none;
+    }
+
+    textarea:focus {
+      box-shadow: 5px 5px 0 var(--lime);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .limit {
+      color: var(--muted);
+      font: 14px Arial, sans-serif;
+    }
+
+    select,
+    button {
+      border: 2px solid var(--ink);
+      border-radius: 0;
+      font: 700 14px Arial, sans-serif;
+    }
+
+    select {
+      margin-left: 6px;
+      padding: 10px;
+      background: var(--panel);
+    }
+
+    button {
+      padding: 13px 18px;
+      cursor: pointer;
+      color: var(--ink);
+      background: var(--lime);
+    }
+
+    button:hover {
+      background: var(--coral);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: .6;
+    }
+
+    .results-panel {
+      min-height: 300px;
+      padding: 26px;
+    }
+
+    .results-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 23px;
+      font-weight: 400;
+    }
+
+    .status {
+      color: var(--muted);
+      font: 12px Arial, sans-serif;
+    }
+
+    .empty {
+      margin-top: 54px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.45;
+    }
+
+    .result {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      animation: rise .35s ease both;
+    }
+
+    .result:last-child {
+      border-bottom: 0;
+    }
+
+    .result-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--coral);
+      font: 700 11px Arial, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .plaintext {
+      margin: 7px 0 5px;
+      font-size: 22px;
+      overflow-wrap: anywhere;
+    }
+
+    .score {
+      color: var(--muted);
+      font: 12px Arial, sans-serif;
+    }
+
+    .error {
+      color: #b33720;
+      font: 14px Arial, sans-serif;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 700px) {
+      main {
+        width: min(100% - 28px, 560px);
+        padding-top: 30px;
+      }
+
+      header {
+        margin-bottom: 30px;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .input-panel,
+      .results-panel {
+        padding: 20px;
+      }
+
+      .controls {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="kicker">Classical cipher detective</p>
+        <h1>What does it say?</h1>
+      </div>
+      <div class="mark" aria-hidden="true">M/D</div>
+    </header>
+    <div class="workspace">
+      <section class="panel input-panel">
+        <form id="decode-form">
+          <label for="ciphertext">Ciphertext</label>
+          <textarea id="ciphertext" name="ciphertext" placeholder="Paste the coded words here..." autofocus
+            required></textarea>
+          <div class="controls"><span class="limit">Show <select id="limit" aria-label="Number of results">
+                <option value="1">best match</option>
+                <option value="5" selected>top 5</option>
+                <option value="10">top 10</option>
+              </select></span><button id="submit" type="submit">Decode &rarr;</button></div>
+        </form>
+      </section>
+      <section class="panel results-panel" aria-live="polite">
+        <div class="results-heading">
+          <h2>Decoded possibilities</h2><span id="status" class="status">Waiting for text</span>
+        </div>
+        <div id="results" class="empty">Your clearest reading will appear here.</div>
+      </section>
+    </div>
+  </main>
+  <script>
+    const form = document.querySelector('#decode-form');
+    const input = document.querySelector('#ciphertext');
+    const limit = document.querySelector('#limit');
+    const submit = document.querySelector('#submit');
+    const results = document.querySelector('#results');
+    const status = document.querySelector('#status');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      submit.disabled = true;
+      status.textContent = 'Working...';
+      results.className = 'empty';
+      results.textContent = 'Comparing cipher patterns';
+      try {
+        const response = await fetch('/api/decode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ciphertext: input.value, limit: Number(limit.value) }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        results.className = '';
+        results.innerHTML = data.results.map((result, index) => `<article class="result" style="animation-delay: ${index * 45}ms"><div class="result-meta"><span>${result.cipher_name}</span><span>#${index + 1}</span></div><div class="plaintext"></div><div class="score">English score ${result.score.toFixed(2)} · dictionary confidence ${(result.dictionary_confidence * 100).toFixed(0)}%</div></article>`).join('');
+        data.results.forEach((result, index) => { results.children[index].querySelector('.plaintext').textContent = result.plaintext; });
+        status.textContent = `${data.results.length} result${data.results.length === 1 ? '' : 's'}`;
+      } catch (error) { results.className = 'error'; results.textContent = error.message; status.textContent = 'Could not decode'; }
+      finally { submit.disabled = false; }
+    });
+  </script>
+</body>
+
+</html>

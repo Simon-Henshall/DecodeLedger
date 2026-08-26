@@ -20,6 +20,14 @@ Pass ciphertext as an argument:
 python main.py "Khoor, zruog!"
 ```
 
+For a simple browser interface, start the local web server:
+
+```text
+python web.py
+```
+
+Then open <http://127.0.0.1:8000>.
+
 The CLI prints the highest-ranked candidate by default. Use `--all` to inspect
 every candidate and `--top N` to limit the number shown:
 
