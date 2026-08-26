@@ -1,63 +1,92 @@
 # DecodeLedger
 
-A small Python command-line tool that tries several classical ciphers and ranks
-the resulting plaintexts by how closely they resemble English.
+DecodeLedger is a Python toolkit for exploring unknown text. It tries a focused
+set of classical ciphers, unwraps common encodings, and ranks candidate
+plaintexts using lightweight English-language analysis.
 
-## Installation
+> GitHub About: **Detect, unwrap, and rank classical ciphers and encoded text with Python.**
 
-Python 3.10 or newer is recommended. The runtime uses only the standard library.
-For development and tests, install the optional test dependency:
+This is an exploratory decoder, not a guarantee of the original message. Short
+or unusual text can produce plausible-looking false positives, so treat the
+ranking as a useful lead rather than proof.
 
-```text
-python -m pip install -r requirements.txt
-```
+## Features
 
-## Usage
+- Tries Caesar, Atbash, Affine, Bacon, Rail Fence, Bifid, Hill, Scytale,
+  Vigenere, Playfair, and Columnar Transposition ciphers.
+- Detects and recursively unwraps hexadecimal, Base64, URL-safe Base64,
+  binary, percent encoding, Base32, and Base85 before cipher cracking.
+- Scores candidates from 0 to 1 using dictionary coverage, bigrams, trigrams,
+  and normalised chi-square analysis.
+- Exposes the same engine through a small command-line interface and a local
+  browser interface with ciphertext analysis and ranked results.
+- Uses only the Python standard library at runtime.
 
-Pass ciphertext as an argument:
+## Quick start
+
+Requires Python 3.10 or newer.
 
 ```text
 python main.py "Khoor, zruog!"
 ```
 
-For a simple browser interface, start the local web server:
+The default output is the highest-ranked candidate:
+
+```text
+[caesar] Hello, world! (score: 0.56)
+```
+
+To inspect more candidates, request a result count with `--top`. Add `--all`
+to filter candidates by dictionary confidence; if no candidate passes the
+threshold, the CLI falls back to the top-ranked results.
+
+```text
+python main.py "Khoor, zruog!" --all --top 5
+python main.py "Khoor, zruog!" --all --top 5 --threshold 0.75
+```
+
+The threshold must be between 0 and 1, and `--top` must be at least 1.
+
+## Browser interface
+
+Start the local server from the repository root:
 
 ```text
 python web.py
 ```
 
-Then open <http://127.0.0.1:8000>.
+Open <http://127.0.0.1:8000> in a browser. The interface shows ranked decode
+results alongside ciphertext statistics, likely ciphers, and any detected
+encoding layers. The server binds to `127.0.0.1`, so it is intended for local
+use.
 
-The CLI prints the highest-ranked candidate by default. Use `--all` to inspect
-only candidates that meet the dictionary-confidence threshold, and `--top N`
-to limit the number shown:
+## Development
 
-```text
-python main.py "Khoor, zruog!" --all --top 5
-```
-
-Adjust the readability threshold from 0 to 1 when needed:
+Install the test dependency and run the suite:
 
 ```text
-python main.py "Khoor, zruog!" --all --threshold 0.75
+python -m pip install -r requirements.txt
+python -m pytest
 ```
 
-The package is intentionally modular. Add a cipher by inheriting from
-`decoder.ciphers.base.Cipher`, implementing `crack(ciphertext)`, and registering
-an instance in `decoder.engine.DEFAULT_CIPHERS`.
+The engine is modular. To add a cipher, inherit from
+`decoder.ciphers.base.Cipher`, implement `crack(ciphertext)`, and register an
+instance in `decoder.engine.DEFAULT_CIPHERS`.
 
-Candidates are ranked with a bounded English-confidence score from 0 to 1,
-combining dictionary coverage, bigrams, trigrams, and normalised chi-square.
-
-Before classical cracking, the engine performs a signature-gated first pass
-for hexadecimal, Base64 and URL-safe Base64, binary, percent encoding, Base32,
-and Base85. A recursive unpeeler follows useful decoded text through up to
-four encoding layers; optional custom Base64 alphabets are supported through
+Custom Base64 alphabets are supported through
 `recursive_unpeeler(..., custom_alphabet=...)`.
 
 ## Project layout
 
-- `main.py` - command-line entry point
-- `decoder/ciphers/` - Affine, Atbash, Bacon, Bifid, Caesar, Hill, Vigenere, Playfair, Rail Fence, Scytale, and Columnar Transposition crackers
-- `decoder/intelligence/` - frequency and dictionary scoring
-- `tests/` - unit tests for the cipher and scoring layers
+```text
+main.py                 CLI entry point
+web.py                  Local browser server and JSON API
+decoder/ciphers/        Classical cipher implementations
+decoder/intelligence/   Analysis, dictionary, frequency, and unpeeling logic
+web/                    Browser interface assets
+tests/                  Cipher, intelligence, and web tests
+```
+
+## License
+
+See [LICENSE](LICENSE).
