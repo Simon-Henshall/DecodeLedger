@@ -1,4 +1,4 @@
-"""Command-line entry point for multi-decoder."""
+"""Command-line entry point for DecodeLedger."""
 
 import argparse
 

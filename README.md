@@ -1,4 +1,4 @@
-# Multi-Decoder
+# DecodeLedger
 
 A small Python command-line tool that tries several classical ciphers and ranks
 the resulting plaintexts by how closely they resemble English.

@@ -1,4 +1,4 @@
-"""Small web interface for the multi-decoder."""
+"""Small web interface for DecodeLedger."""
 
 import json
 import math
@@ -85,7 +85,7 @@ class DecoderRequestHandler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 8000), DecoderRequestHandler)
-    print("Multi-Decoder is running at http://127.0.0.1:8000")
+    print("DecodeLedger is running at http://127.0.0.1:8000")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
