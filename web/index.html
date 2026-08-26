@@ -314,7 +314,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         results.className = '';
-        results.innerHTML = data.results.map((result, index) => `<article class="result" style="animation-delay: ${index * 45}ms"><div class="result-meta"><span>${result.cipher_name}</span><span>#${index + 1}</span></div><div class="plaintext"></div><div class="score">English score ${result.score.toFixed(2)} · dictionary confidence ${(result.dictionary_confidence * 100).toFixed(0)}%</div></article>`).join('');
+        results.innerHTML = data.results.map((result, index) => `<article class="result" style="animation-delay: ${index * 45}ms"><div class="result-meta"><span>${result.cipher_name}</span><span>#${index + 1}</span></div><div class="plaintext"></div><div class="score">English confidence ${(result.score * 100).toFixed(0)}% · dictionary confidence ${(result.dictionary_confidence * 100).toFixed(0)}%</div></article>`).join('');
         data.results.forEach((result, index) => { results.children[index].querySelector('.plaintext').textContent = result.plaintext; });
         status.textContent = `${data.results.length} result${data.results.length === 1 ? '' : 's'} · ${data.analysis.primary_cipher}`;
         status.title = data.analysis.hint;

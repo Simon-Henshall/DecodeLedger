@@ -46,6 +46,9 @@ The package is intentionally modular. Add a cipher by inheriting from
 `decoder.ciphers.base.Cipher`, implementing `crack(ciphertext)`, and registering
 an instance in `decoder.engine.DEFAULT_CIPHERS`.
 
+Candidates are ranked with a bounded English-confidence score from 0 to 1,
+combining dictionary coverage, bigrams, trigrams, and normalised chi-square.
+
 ## Project layout
 
 - `main.py` - command-line entry point

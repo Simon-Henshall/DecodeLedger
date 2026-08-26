@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from concurrent.futures import ProcessPoolExecutor
+from math import exp
 import os
 
 from .ciphers import (
@@ -75,18 +76,19 @@ class DecoderEngine:
                 word_confidence = dictionary_score(plaintext)
                 bigram_confidence = bigram_score(plaintext)
                 trigram_confidence = trigram_score(plaintext)
+                chi_square = chi_squared_score(plaintext)
+                chi_confidence = 0.0 if chi_square == float("inf") else exp(-chi_square / 100)
                 score = (
-                    chi_squared_score(plaintext)
-                    - word_confidence * 50
-                    - bigram_confidence * 12
-                    - trigram_confidence * 18
-                    - (500 if word_confidence >= 0.7 else 0)
+                    word_confidence * 0.45
+                    + bigram_confidence * 0.20
+                    + trigram_confidence * 0.20
+                    + chi_confidence * 0.15
                 )
                 results.append(DecodeResult(cipher_name, plaintext, score, word_confidence))
         if analysis.primary_cipher in {"bifid", "hill", "playfair", "scytale", "rail fence", "columnar transposition"}:
             priority = {name: index for index, name in enumerate(analysis.likely_ciphers)}
-            return sorted(results, key=lambda result: (priority.get(result.cipher_name, len(priority)), result.score))
-        return sorted(results, key=lambda result: result.score)
+            return sorted(results, key=lambda result: (priority.get(result.cipher_name, len(priority)), -result.score))
+        return sorted(results, key=lambda result: result.score, reverse=True)
 
     def _crack_in_parallel(self, ciphers: tuple[Cipher, ...], ciphertext: str) -> list[tuple[str, list[str]]]:
         if len(ciphers) <= 1:

@@ -46,6 +46,13 @@ def test_engine_prefers_dictionary_confidence_for_vigenere():
     assert result.cipher_name == "vigenere"
 
 
+def test_engine_scores_are_bounded_naturalness_values():
+    results = DecoderEngine().decode("Lxfopv ef rnhr")
+
+    assert all(0.0 <= result.score <= 1.0 for result in results)
+    assert results[0].score > results[-1].score
+
+
 def test_analysis_routes_ab_input_to_bacon():
     analysis = analyze_ciphertext("aabbb aabaa ababa ababa abbab")
 
