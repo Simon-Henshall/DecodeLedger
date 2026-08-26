@@ -150,3 +150,9 @@ def test_engine_decodes_peeled_text_without_reanalyzing_original_layer():
 
     assert result.cipher_name.startswith("hex -> ")
     assert result.plaintext == "Hello"
+
+
+def test_engine_reuses_one_executor_for_peeled_pipeline():
+    result = DecoderEngine(max_workers=2).decode("VkdobGJHVT0=")[0]
+
+    assert result.cipher_name.startswith("base64")

@@ -71,15 +71,27 @@ class DecoderEngine:
         results = []
         analysis = self.analyze(ciphertext)
         peeled_inputs = recursive_unpeeler(ciphertext)
-        if len(peeled_inputs) > 1:
-            return self._decode_peeled(peeled_inputs, analysis)
-        return self._decode_text(ciphertext, analysis)
+        if len(self.ciphers) <= 1 and len(peeled_inputs) <= 1:
+            return self._decode_text(ciphertext, analysis)
 
-    def _decode_peeled(self, peeled_inputs: list[tuple[str, str]], analysis: CipherAnalysis) -> list[DecodeResult]:
+        worker_count = self.max_workers or min(
+            max(len(self.ciphers), len(peeled_inputs)), os.cpu_count() or 1
+        )
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            if len(peeled_inputs) > 1:
+                return self._decode_peeled(peeled_inputs, analysis, executor)
+            return self._decode_text(ciphertext, analysis, executor)
+
+    def _decode_peeled(
+        self,
+        peeled_inputs: list[tuple[str, str]],
+        analysis: CipherAnalysis,
+        executor: ProcessPoolExecutor,
+    ) -> list[DecodeResult]:
         results = []
-        analyses = self._analyze_peeled_inputs(peeled_inputs, analysis)
+        analyses = self._analyze_peeled_inputs(peeled_inputs, analysis, executor)
         for (encoding_chain, text), text_analysis in zip(peeled_inputs, analyses):
-            for result in self._decode_text(text, text_analysis):
+            for result in self._decode_text(text, text_analysis, executor):
                 name = f"{encoding_chain} -> {result.cipher_name}" if encoding_chain else result.cipher_name
                 results.append(DecodeResult(name, result.plaintext, result.score, result.dictionary_confidence))
         return sorted(results, key=lambda result: result.score, reverse=True)
@@ -88,24 +100,28 @@ class DecoderEngine:
         self,
         peeled_inputs: list[tuple[str, str]],
         original_analysis: CipherAnalysis,
+        executor: ProcessPoolExecutor,
     ) -> list[CipherAnalysis]:
         if len(peeled_inputs) <= 1:
             return [original_analysis]
         analyses = [original_analysis]
         texts = [text for encoding_chain, text in peeled_inputs[1:]]
-        worker_count = self.max_workers or min(len(texts), os.cpu_count() or 1)
-        with ProcessPoolExecutor(max_workers=worker_count) as executor:
-            analyses.extend(executor.map(_analyze_text, texts))
+        analyses.extend(executor.map(_analyze_text, texts))
         return analyses
 
-    def _decode_text(self, ciphertext: str, analysis: CipherAnalysis) -> list[DecodeResult]:
+    def _decode_text(
+        self,
+        ciphertext: str,
+        analysis: CipherAnalysis,
+        executor: ProcessPoolExecutor | None = None,
+    ) -> list[DecodeResult]:
         results = []
         if analysis.primary_cipher == "bacon":
             ciphers = tuple(cipher for cipher in self.ciphers if cipher.name == "bacon")
         else:
             priority = {name: index for index, name in enumerate(analysis.likely_ciphers)}
             ciphers = tuple(sorted(self.ciphers, key=lambda cipher: priority.get(cipher.name, len(priority))))
-        cipher_results = self._crack_in_parallel(ciphers, ciphertext)
+        cipher_results = self._crack_in_parallel(ciphers, ciphertext, executor)
         for cipher_name, plaintexts in cipher_results:
             for plaintext in plaintexts:
                 word_confidence = dictionary_score(plaintext)
@@ -130,13 +146,21 @@ class DecoderEngine:
             return sorted(results, key=lambda result: (priority.get(result.cipher_name, len(priority)), -result.score))
         return sorted(results, key=lambda result: result.score, reverse=True)
 
-    def _crack_in_parallel(self, ciphers: tuple[Cipher, ...], ciphertext: str) -> list[tuple[str, list[str]]]:
+    def _crack_in_parallel(
+        self,
+        ciphers: tuple[Cipher, ...],
+        ciphertext: str,
+        executor: ProcessPoolExecutor | None = None,
+    ) -> list[tuple[str, list[str]]]:
         if len(ciphers) <= 1:
             return [_crack_cipher((cipher, ciphertext)) for cipher in ciphers]
 
-        worker_count = self.max_workers or min(len(ciphers), os.cpu_count() or 1)
-        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+        if executor is not None:
             return list(executor.map(_crack_cipher, ((cipher, ciphertext) for cipher in ciphers)))
+
+        worker_count = self.max_workers or min(len(ciphers), os.cpu_count() or 1)
+        with ProcessPoolExecutor(max_workers=worker_count) as local_executor:
+            return list(local_executor.map(_crack_cipher, ((cipher, ciphertext) for cipher in ciphers)))
 
     @staticmethod
     def analyze(ciphertext: str) -> CipherAnalysis:
