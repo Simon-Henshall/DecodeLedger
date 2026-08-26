@@ -58,3 +58,10 @@ def test_cli_parser_exposes_readability_threshold():
 
     assert args.all is True
     assert args.threshold == 0.75
+
+
+def test_engine_accepts_parallel_worker_limit():
+    engine = DecoderEngine(max_workers=2)
+
+    assert engine.max_workers == 2
+    assert engine.decode("Lxfopv ef rnhr")[0].plaintext == "Attack at dawn"

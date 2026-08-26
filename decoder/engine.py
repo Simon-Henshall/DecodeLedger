@@ -1,6 +1,8 @@
 """Coordinate cipher cracking and English-language ranking."""
 
 from dataclasses import dataclass
+from concurrent.futures import ProcessPoolExecutor
+import os
 
 from .ciphers import (
     AffineCipher,
@@ -34,6 +36,11 @@ class DecodeResult:
     dictionary_confidence: float
 
 
+def _crack_cipher(arguments: tuple[Cipher, str]) -> tuple[str, list[str]]:
+    cipher, ciphertext = arguments
+    return cipher.name, cipher.crack(ciphertext)
+
+
 DEFAULT_CIPHERS: tuple[Cipher, ...] = (
     CaesarCipher(),
     AtbashCipher(),
@@ -50,8 +57,9 @@ DEFAULT_CIPHERS: tuple[Cipher, ...] = (
 
 
 class DecoderEngine:
-    def __init__(self, ciphers: tuple[Cipher, ...] = DEFAULT_CIPHERS) -> None:
+    def __init__(self, ciphers: tuple[Cipher, ...] = DEFAULT_CIPHERS, max_workers: int | None = None) -> None:
         self.ciphers = ciphers
+        self.max_workers = max_workers
 
     def decode(self, ciphertext: str) -> list[DecodeResult]:
         results = []
@@ -61,8 +69,9 @@ class DecoderEngine:
         else:
             priority = {name: index for index, name in enumerate(analysis.likely_ciphers)}
             ciphers = tuple(sorted(self.ciphers, key=lambda cipher: priority.get(cipher.name, len(priority))))
-        for cipher in ciphers:
-            for plaintext in cipher.crack(ciphertext):
+        cipher_results = self._crack_in_parallel(ciphers, ciphertext)
+        for cipher_name, plaintexts in cipher_results:
+            for plaintext in plaintexts:
                 word_confidence = dictionary_score(plaintext)
                 bigram_confidence = bigram_score(plaintext)
                 trigram_confidence = trigram_score(plaintext)
@@ -73,11 +82,19 @@ class DecoderEngine:
                     - trigram_confidence * 18
                     - (500 if word_confidence >= 0.7 else 0)
                 )
-                results.append(DecodeResult(cipher.name, plaintext, score, word_confidence))
+                results.append(DecodeResult(cipher_name, plaintext, score, word_confidence))
         if analysis.primary_cipher in {"bifid", "hill", "playfair", "scytale", "rail fence", "columnar transposition"}:
             priority = {name: index for index, name in enumerate(analysis.likely_ciphers)}
             return sorted(results, key=lambda result: (priority.get(result.cipher_name, len(priority)), result.score))
         return sorted(results, key=lambda result: result.score)
+
+    def _crack_in_parallel(self, ciphers: tuple[Cipher, ...], ciphertext: str) -> list[tuple[str, list[str]]]:
+        if len(ciphers) <= 1:
+            return [_crack_cipher((cipher, ciphertext)) for cipher in ciphers]
+
+        worker_count = self.max_workers or min(len(ciphers), os.cpu_count() or 1)
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            return list(executor.map(_crack_cipher, ((cipher, ciphertext) for cipher in ciphers)))
 
     @staticmethod
     def analyze(ciphertext: str) -> CipherAnalysis:
