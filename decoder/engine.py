@@ -16,7 +16,14 @@ from .ciphers import (
     VigenereCipher,
 )
 from .ciphers.base import Cipher
-from .intelligence import CipherAnalysis, analyze_ciphertext, chi_squared_score, dictionary_score
+from .intelligence import (
+    CipherAnalysis,
+    analyze_ciphertext,
+    bigram_score,
+    chi_squared_score,
+    dictionary_score,
+    trigram_score,
+)
 
 
 @dataclass(frozen=True)
@@ -57,7 +64,15 @@ class DecoderEngine:
         for cipher in ciphers:
             for plaintext in cipher.crack(ciphertext):
                 word_confidence = dictionary_score(plaintext)
-                score = chi_squared_score(plaintext) - word_confidence * 50
+                bigram_confidence = bigram_score(plaintext)
+                trigram_confidence = trigram_score(plaintext)
+                score = (
+                    chi_squared_score(plaintext)
+                    - word_confidence * 50
+                    - bigram_confidence * 12
+                    - trigram_confidence * 18
+                    - (500 if word_confidence >= 0.7 else 0)
+                )
                 results.append(DecodeResult(cipher.name, plaintext, score, word_confidence))
         if analysis.primary_cipher in {"bifid", "hill", "playfair", "scytale", "rail fence", "columnar transposition"}:
             priority = {name: index for index, name in enumerate(analysis.likely_ciphers)}

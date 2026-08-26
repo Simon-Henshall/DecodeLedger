@@ -2,6 +2,14 @@
 
 from .analysis import CipherAnalysis, analyze_ciphertext
 from .dictionary import dictionary_score, word_tokens
-from .frequency import chi_squared_score
+from .frequency import bigram_score, chi_squared_score, trigram_score
 
-__all__ = ["CipherAnalysis", "analyze_ciphertext", "chi_squared_score", "dictionary_score", "word_tokens"]
+__all__ = [
+	"CipherAnalysis",
+	"analyze_ciphertext",
+	"bigram_score",
+	"chi_squared_score",
+	"dictionary_score",
+	"trigram_score",
+	"word_tokens",
+]

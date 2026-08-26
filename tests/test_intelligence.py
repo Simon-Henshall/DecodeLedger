@@ -1,12 +1,17 @@
 from decoder.engine import DecoderEngine
 from decoder.intelligence.dictionary import dictionary_score, word_tokens
-from decoder.intelligence.frequency import chi_squared_score
+from decoder.intelligence.frequency import bigram_score, chi_squared_score, trigram_score
 from decoder.intelligence.analysis import analyze_ciphertext
 from main import build_parser
 
 
 def test_frequency_score_is_finite_for_letters():
     assert chi_squared_score("this is an english sentence") < chi_squared_score("qzx qzx qzx qzx")
+
+
+def test_ngram_scores_prefer_english_sequences():
+    assert bigram_score("the quick brown fox") > bigram_score("qzx qzx qzx")
+    assert trigram_score("the quick brown fox") > trigram_score("qzx qzx qzx")
 
 
 def test_dictionary_scores_known_words():

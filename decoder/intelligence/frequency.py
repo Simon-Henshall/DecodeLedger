@@ -12,6 +12,13 @@ ENGLISH_FREQUENCIES = {
     "z": 0.07,
 }
 
+COMMON_BIGRAMS = frozenset(
+    "th he in er an re on at en nd ti es or te of ed is it al ar st to nt ng se ha as ou io le ve co me de hi ri ro ic ne ea ra ce li ch ll be ma si om ur".split()
+)
+COMMON_TRIGRAMS = frozenset(
+    "the and ing her ere ent tha nth was eth for dth hat she ion tio ver est ers ati his all ith ted ter ers ate you ons ith one our out are rea eve con not but had with this ting ment".split()
+)
+
 
 def chi_squared_score(text: str) -> float:
     """Return the chi-squared distance from typical English frequencies."""
@@ -26,3 +33,21 @@ def chi_squared_score(text: str) -> float:
         / (length * expected / 100)
         for letter, expected in ENGLISH_FREQUENCIES.items()
     )
+
+
+def _ngram_score(text: str, n: int, common: frozenset[str]) -> float:
+    letters = "".join(character for character in text.lower() if character in string.ascii_lowercase)
+    if len(letters) < n:
+        return 0.0
+    ngrams = [letters[index : index + n] for index in range(len(letters) - n + 1)]
+    return sum(ngram in common for ngram in ngrams) / len(ngrams)
+
+
+def bigram_score(text: str) -> float:
+    """Return the proportion of adjacent letter pairs common in English."""
+    return _ngram_score(text, 2, COMMON_BIGRAMS)
+
+
+def trigram_score(text: str) -> float:
+    """Return the proportion of adjacent letter triplets common in English."""
+    return _ngram_score(text, 3, COMMON_TRIGRAMS)
