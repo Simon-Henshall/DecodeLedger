@@ -7,6 +7,7 @@ from decoder.ciphers import (
     ColumnarTranspositionCipher,
     PlayfairCipher,
     RailFenceCipher,
+    ScytaleCipher,
     VigenereCipher,
 )
 
@@ -39,6 +40,10 @@ def test_rail_fence_tries_common_rail_counts():
 
 def test_bifid_tries_common_key_and_period():
     assert "wearediscoveredfleeatonce" in BifidCipher().crack("kdwaeanesztrardhkruatnkuu")
+
+
+def test_scytale_tries_common_diameters():
+    assert "wearediscoveredfleeatonce" in ScytaleCipher().crack("wriorfeoeeesvelanadcedetc")
 
 
 def test_playfair_tries_common_key():

@@ -11,6 +11,7 @@ from .ciphers import (
     ColumnarTranspositionCipher,
     PlayfairCipher,
     RailFenceCipher,
+    ScytaleCipher,
     VigenereCipher,
 )
 from .ciphers.base import Cipher
@@ -32,6 +33,7 @@ DEFAULT_CIPHERS: tuple[Cipher, ...] = (
     BaconCipher(),
     RailFenceCipher(),
     BifidCipher(),
+    ScytaleCipher(),
     VigenereCipher(),
     PlayfairCipher(),
     ColumnarTranspositionCipher(),

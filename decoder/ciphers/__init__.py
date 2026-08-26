@@ -8,6 +8,7 @@ from .caesar import CaesarCipher
 from .columnar import ColumnarTranspositionCipher
 from .playfair import PlayfairCipher
 from .rail_fence import RailFenceCipher
+from .scytale import ScytaleCipher
 from .vigenere import VigenereCipher
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
 	"ColumnarTranspositionCipher",
 	"PlayfairCipher",
 	"RailFenceCipher",
+	"ScytaleCipher",
 	"VigenereCipher",
 ]
