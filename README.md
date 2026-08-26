@@ -49,6 +49,12 @@ an instance in `decoder.engine.DEFAULT_CIPHERS`.
 Candidates are ranked with a bounded English-confidence score from 0 to 1,
 combining dictionary coverage, bigrams, trigrams, and normalised chi-square.
 
+Before classical cracking, the engine performs a signature-gated first pass
+for hexadecimal, Base64 and URL-safe Base64, binary, percent encoding, Base32,
+and Base85. A recursive unpeeler follows useful decoded text through up to
+four encoding layers; optional custom Base64 alphabets are supported through
+`recursive_unpeeler(..., custom_alphabet=...)`.
+
 ## Project layout
 
 - `main.py` - command-line entry point

@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from decoder.engine import DecoderEngine
+from decoder.intelligence import recursive_unpeeler
 
 
 WEB_ROOT = Path(__file__).parent / "web"
@@ -34,6 +35,7 @@ def decode_payload(payload: dict) -> list[dict]:
 
 def analysis_payload(ciphertext: str) -> dict:
     analysis = DecoderEngine().analyze(ciphertext)
+    encoding_layers = [chain for chain, value in recursive_unpeeler(ciphertext) if chain]
     return {
         "letter_count": analysis.letter_count,
         "index_of_coincidence": round(analysis.index_of_coincidence, 4),
@@ -43,6 +45,7 @@ def analysis_payload(ciphertext: str) -> dict:
         "pipeline_route": analysis.pipeline_route,
         "character_set": analysis.character_set,
         "raw_character_set": analysis.raw_character_set,
+        "encoding_layers": encoding_layers,
         "likely_ciphers": list(analysis.likely_ciphers),
         "primary_cipher": analysis.primary_cipher,
         "hint": analysis.hint,

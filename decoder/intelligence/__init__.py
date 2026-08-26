@@ -3,6 +3,7 @@
 from .analysis import CipherAnalysis, analyze_ciphertext
 from .dictionary import dictionary_score, word_tokens
 from .frequency import bigram_score, chi_squared_score, shannon_entropy, trigram_score
+from .unpeeler import EncodingLayer, recursive_unpeeler
 
 __all__ = [
 	"CipherAnalysis",
@@ -10,6 +11,8 @@ __all__ = [
 	"bigram_score",
 	"chi_squared_score",
 	"dictionary_score",
+	"EncodingLayer",
+	"recursive_unpeeler",
 	"shannon_entropy",
 	"trigram_score",
 	"word_tokens",

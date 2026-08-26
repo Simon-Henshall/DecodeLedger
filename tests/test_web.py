@@ -31,6 +31,12 @@ def test_web_analysis_includes_cipher_hint():
     assert " " in analysis["raw_character_set"]
 
 
+def test_web_analysis_reports_recursive_encoding_layers():
+    analysis = analysis_payload("48656c6c6f")
+
+    assert "hex" in analysis["encoding_layers"]
+
+
 def test_web_decode_prioritizes_predicted_transposition():
     result = decode_payload({"ciphertext": "wriorfeoeeesvelanadcedetc", "limit": 5})
 

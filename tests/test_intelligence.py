@@ -2,6 +2,7 @@ from decoder.engine import DecoderEngine
 from decoder.intelligence.dictionary import dictionary_score, word_tokens
 from decoder.intelligence.frequency import bigram_score, chi_squared_score, shannon_entropy, trigram_score
 from decoder.intelligence.analysis import analyze_ciphertext
+from decoder.intelligence.unpeeler import recursive_unpeeler
 from main import build_parser
 
 
@@ -117,3 +118,18 @@ def test_engine_accepts_parallel_worker_limit():
 
     assert engine.max_workers == 2
     assert engine.decode("Lxfopv ef rnhr")[0].plaintext == "Attack at dawn"
+
+
+def test_recursive_unpeeler_decodes_nested_base64():
+    layers = recursive_unpeeler("VkdobGJHVT0=")
+
+    assert ("base64", "VGhlbGU=") in layers
+    assert any(chain == "base64 -> base64" and value == "Thele" for chain, value in layers)
+
+
+def test_recursive_unpeeler_supports_common_structural_encodings():
+    assert ("hex", "Hello") in recursive_unpeeler("48656c6c6f")
+    assert ("binary", "Hello") in recursive_unpeeler("01001000 01100101 01101100 01101100 01101111")
+    assert ("percent", "Hello world") in recursive_unpeeler("Hello%20world")
+    assert ("base32", "Hello") in recursive_unpeeler("JBSWY3DP")
+    assert ("base85", "Hello") in recursive_unpeeler("87cURDZ")

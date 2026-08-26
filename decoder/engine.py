@@ -26,6 +26,7 @@ from .intelligence import (
     chi_squared_score,
     dictionary_score,
     trigram_score,
+    recursive_unpeeler,
 )
 
 
@@ -65,6 +66,21 @@ class DecoderEngine:
     def decode(self, ciphertext: str) -> list[DecodeResult]:
         results = []
         analysis = self.analyze(ciphertext)
+        peeled_inputs = recursive_unpeeler(ciphertext)
+        if len(peeled_inputs) > 1:
+            return self._decode_peeled(peeled_inputs, analysis)
+        return self._decode_text(ciphertext, analysis)
+
+    def _decode_peeled(self, peeled_inputs: list[tuple[str, str]], analysis: CipherAnalysis) -> list[DecodeResult]:
+        results = []
+        for encoding_chain, text in peeled_inputs:
+            for result in self._decode_text(text, self.analyze(text)):
+                name = f"{encoding_chain} -> {result.cipher_name}" if encoding_chain else result.cipher_name
+                results.append(DecodeResult(name, result.plaintext, result.score, result.dictionary_confidence))
+        return sorted(results, key=lambda result: result.score, reverse=True)
+
+    def _decode_text(self, ciphertext: str, analysis: CipherAnalysis) -> list[DecodeResult]:
+        results = []
         if analysis.primary_cipher == "bacon":
             ciphers = tuple(cipher for cipher in self.ciphers if cipher.name == "bacon")
         else:
