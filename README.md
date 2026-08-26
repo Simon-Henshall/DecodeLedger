@@ -4,8 +4,6 @@ DecodeLedger is a Python toolkit for exploring unknown text. It tries a focused
 set of classical ciphers, unwraps common encodings, and ranks candidate
 plaintexts using lightweight English-language analysis.
 
-> GitHub About: **Detect, unwrap, and rank classical ciphers and encoded text with Python.**
-
 This is an exploratory decoder, not a guarantee of the original message. Short
 or unusual text can produce plausible-looking false positives, so treat the
 ranking as a useful lead rather than proof.
